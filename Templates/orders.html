@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Order History - Amazoff{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">Order History</h1>
+        <p class="text-muted">View all your past purchases</p>
+    </div>
+</div>
+
+{% if orders and orders|length > 0 %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-cookie-cream">
+                <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Your Orders</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>#{{ order.id }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if order.image_url %}
+                                            <img src="{{ order.image_url }}" alt="{{ order.name }}" class="img-thumbnail me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ order.name }}</strong>
+                                            {% if order.category %}
+                                                <br><small class="text-muted">{{ order.category }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ order.quantity }}</td>
+                                <td>${{ "%.2f"|format(order.price) }}</td>
+                                <td><strong>${{ "%.2f"|format(order.price * order.quantity) }}</strong></td>
+                                <td>{{ order.order_date }}</td>
+                                <td>
+                                    <span class="badge bg-success">{{ order.status }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-shopping-bag fa-4x text-muted mb-4"></i>
+                <h3>No orders yet</h3>
+                <p class="text-muted">Start shopping to see your order history here!</p>
+                <a href="{{ url_for('home') }}" class="btn btn-primary mt-3">
+                    <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
