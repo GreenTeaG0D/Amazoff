@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Transaction History - Amazoff{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">Transaction History</h1>
+        <p class="text-muted">View all transactions for your products</p>
+    </div>
+</div>
+
+{% if transactions and transactions|length > 0 %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-cookie-cream">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Transactions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Product</th>
+                                <th>Buyer</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>#{{ transaction.id }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if transaction.image_url %}
+                                            <img src="{{ transaction.image_url }}" alt="{{ transaction.name }}" class="img-thumbnail me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ transaction.name }}</strong>
+                                            {% if transaction.category %}
+                                                <br><small class="text-muted">{{ transaction.category }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ transaction.buyer_username or transaction.username }}</td>
+                                <td>{{ transaction.quantity }}</td>
+                                <td>${{ "%.2f"|format(transaction.price) }}</td>
+                                <td><strong>${{ "%.2f"|format(transaction.price * transaction.quantity) }}</strong></td>
+                                <td>{{ transaction.order_date }}</td>
+                                <td>
+                                    <span class="badge bg-success">{{ transaction.status }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="5" class="text-end"><strong>Total Revenue:</strong></td>
+                                <td><strong>${{ "%.2f"|format(total_revenue) }}</strong></td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-chart-line fa-4x text-muted mb-4"></i>
+                <h3>No transactions yet</h3>
+                <p class="text-muted">Transactions will appear here once customers purchase your products.</p>
+                <a href="{{ url_for('admin') }}" class="btn btn-primary mt-3">
+                    <i class="fas fa-plus me-2"></i>Create Product
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

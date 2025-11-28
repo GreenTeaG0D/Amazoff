@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Edit Product - Amazoff{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5">Edit Product</h1>
+        <p class="text-muted">Update product details</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-cookie-cream">
+                <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Product Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Product Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ product.name }}" required maxlength="200">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="price" name="price" 
+                                   value="{{ product.price }}" step="0.01" min="0.01" max="999999.99" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category *</label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="">Select category...</option>
+                            <option value="electronics" {% if product.category == 'electronics' %}selected{% endif %}>Electronics</option>
+                            <option value="clothing" {% if product.category == 'clothing' %}selected{% endif %}>Clothing</option>
+                            <option value="home-garden" {% if product.category == 'home-garden' %}selected{% endif %}>Home & Garden</option>
+                            <option value="books" {% if product.category == 'books' %}selected{% endif %}>Books</option>
+                            <option value="gaming" {% if product.category == 'gaming' %}selected{% endif %}>Gaming</option>
+                            <option value="sports" {% if product.category == 'sports' %}selected{% endif %}>Sports & Outdoors</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" 
+                                  maxlength="5000">{{ product.description or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Product Image</label>
+                        {% if product.image_url %}
+                        <div class="mb-2">
+                            <img src="{{ product.image_url }}" alt="Current image" class="img-thumbnail" style="max-width: 200px;">
+                            <p class="text-muted small">Current image</p>
+                        </div>
+                        {% endif %}
+                        <input type="file" class="form-control" id="image" name="image" 
+                               accept="image/png,image/jpeg,image/jpg,image/gif,image/webp">
+                        <small class="form-text text-muted">
+                            Allowed formats: PNG, JPG, JPEG, GIF, WEBP (Max 16MB). Leave empty to keep current image.
+                        </small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

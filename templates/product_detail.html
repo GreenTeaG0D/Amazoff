@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} - Amazoff{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('home') }}">Home</a></li>
+        {% if product.category %}
+        <li class="breadcrumb-item"><a href="{{ url_for('listings', category=product.category) }}">{{ product.category|title }}</a></li>
+        {% endif %}
+        <li class="breadcrumb-item active">{{ product.name }}</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <!-- Product Image -->
+    <div class="col-md-5">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center p-4">
+                {% if product.image_url %}
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" class="img-fluid" style="max-height: 500px;">
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <i class="fas fa-image fa-5x text-muted"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Product Details -->
+    <div class="col-md-7">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h1 class="display-6 mb-3">{{ product.name }}</h1>
+                
+                <div class="mb-3">
+                    <span class="h3 text-cookie-ink">${{ "%.2f"|format(product.price) }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">
+                        <i class="fas fa-eye me-1"></i>{{ product.view_count|default(0) }} views
+                    </small>
+                    {% if product.category %}
+                        <span class="badge bg-secondary ms-2">{{ product.category|title }}</span>
+                    {% endif %}
+                </div>
+                
+                {% if product.description %}
+                <div class="mb-4">
+                    <h5>Description</h5>
+                    <p class="text-muted">{{ product.description }}</p>
+                </div>
+                {% endif %}
+                
+                {% if current_user and current_user != "*" %}
+                <div class="d-grid gap-2">
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-primary btn-lg" onclick="addToCart('{{ product.id }}', event)">
+                            <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                        </button>
+                        <button class="btn btn-outline-danger btn-lg" onclick="toggleWishlist('{{ product.id }}', this)" 
+                                data-product-id="{{ product.id }}" title="Add to Wishlist">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Please <a href="{{ url_for('login') }}">log in</a> to add items to your cart.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reviews Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-cookie-cream">
+                <h5 class="mb-0"><i class="fas fa-star me-2"></i>Reviews</h5>
+            </div>
+            <div class="card-body">
+                {% if current_user and current_user != "*" and can_review and not user_review %}
+                <!-- Review Form -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6>Write a Review</h6>
+                        <form id="reviewForm">
+                            <input type="hidden" id="productId" value="{{ product.id }}">
+                            <div class="mb-3">
+                                <label for="rating" class="form-label">Rating</label>
+                                <select class="form-select" id="rating" required>
+                                    <option value="">Select rating...</option>
+                                    <option value="5">5 - Excellent</option>
+                                    <option value="4">4 - Very Good</option>
+                                    <option value="3">3 - Good</option>
+                                    <option value="2">2 - Fair</option>
+                                    <option value="1">1 - Poor</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reviewText" class="form-label">Review</label>
+                                <textarea class="form-control" id="reviewText" rows="4" required placeholder="Share your experience with this product..."></textarea>
+                                <small class="text-muted">You can use basic HTML formatting: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;, &lt;ul&gt;&lt;li&gt;lists&lt;/li&gt;&lt;/ul&gt;</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reviewImage" class="form-label">Upload Image (Optional)</label>
+                                <input type="file" class="form-control" id="reviewImage" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp">
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Review
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% elif current_user and current_user != "*" and user_review %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>You have already reviewed this product.
+                </div>
+                {% elif current_user and current_user != "*" and not can_review %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>You must purchase this product before you can review it.
+                </div>
+                {% endif %}
+                
+                <!-- Existing Reviews -->
+                {% if reviews and reviews|length > 0 %}
+                    {% for review in reviews %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <strong>{{ review.username }}</strong>
+                                <div class="text-warning">
+                                    {% for i in range(1, 6) %}
+                                        {% if i <= review.rating %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ review.review_date }}</small>
+                        </div>
+                        {% if review.image_url %}
+                        <div class="mb-2">
+                            <img src="{{ review.image_url }}" alt="Review image" class="img-thumbnail" style="max-width: 200px;">
+                        </div>
+                        {% endif %}
+                        <div class="review-content">
+                            {% if review.review_html %}
+                                {{ review.review_html|safe }}
+                            {% else %}
+                                <p>{{ review.review_text }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">No reviews yet. Be the first to review this product!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function addToCart(productId, event) {
+    {% if current_user and current_user != "*" %}
+        const btn = event ? event.target.closest('button') : null;
+        const originalText = btn ? btn.innerHTML : '';
+        
+        fetch('/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: 1
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-check me-2"></i>Added!';
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-success');
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-primary');
+                    }, 2000);
+                }
+            } else {
+                alert('Failed to add to cart: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error adding to cart');
+        });
+    {% else %}
+        showLoginModal();
+    {% endif %}
+}
+
+// Check wishlist status on page load
+document.addEventListener('DOMContentLoaded', function() {
+    {% if current_user and current_user != "*" %}
+    const wishlistBtn = document.querySelector('[data-product-id="{{ product.id }}"]');
+    if (wishlistBtn) {
+        fetch('/wishlist/check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                product_ids: [{{ product.id }}]
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.in_wishlist && data.in_wishlist.includes({{ product.id }})) {
+                wishlistBtn.classList.add('active');
+                const icon = wishlistBtn.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                }
+                wishlistBtn.title = 'Remove from Wishlist';
+            }
+        })
+        .catch(error => {
+            console.error('Error checking wishlist:', error);
+        });
+    }
+    {% endif %}
+    
+    const reviewForm = document.getElementById('reviewForm');
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const productId = document.getElementById('productId').value;
+            const rating = document.getElementById('rating').value;
+            const reviewText = document.getElementById('reviewText').value;
+            const reviewImage = document.getElementById('reviewImage').files[0];
+            
+            if (!rating || !reviewText) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            // Convert review text to HTML (basic formatting)
+            let reviewHtml = reviewText
+                .replace(/\n/g, '<br>')
+                .replace(/&lt;b&gt;(.*?)&lt;\/b&gt;/g, '<b>$1</b>')
+                .replace(/&lt;i&gt;(.*?)&lt;\/i&gt;/g, '<i>$1</i>')
+                .replace(/&lt;ul&gt;(.*?)&lt;\/ul&gt;/g, '<ul>$1</ul>')
+                .replace(/&lt;li&gt;(.*?)&lt;\/li&gt;/g, '<li>$1</li>');
+            
+            const formData = new FormData();
+            formData.append('product_id', productId);
+            formData.append('rating', rating);
+            formData.append('review_text', reviewText);
+            formData.append('review_html', reviewHtml);
+            if (reviewImage) {
+                formData.append('image', reviewImage);
+            }
+            
+            // Use fetch with FormData for file upload
+            fetch('/review/create', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Review submitted successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to submit review: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error submitting review');
+            });
+        });
+    }
+});
+
+function toggleWishlist(productId, btn) {
+    {% if current_user and current_user != "*" %}
+        const isInWishlist = btn.classList.contains('active');
+        const endpoint = isInWishlist ? '/wishlist/remove' : '/wishlist/add';
+        
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                product_id: productId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (isInWishlist) {
+                    btn.classList.remove('active');
+                    btn.querySelector('i').classList.remove('fas');
+                    btn.querySelector('i').classList.add('far');
+                    btn.title = 'Add to Wishlist';
+                } else {
+                    btn.classList.add('active');
+                    btn.querySelector('i').classList.remove('far');
+                    btn.querySelector('i').classList.add('fas');
+                    btn.title = 'Remove from Wishlist';
+                }
+            } else {
+                alert('Failed to update wishlist: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating wishlist');
+        });
+    {% else %}
+        showLoginModal();
+    {% endif %}
+}
+</script>
+{% endblock %}
+{% endblock %}
+
